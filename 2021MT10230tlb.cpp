@@ -14,27 +14,27 @@ using namespace std;
 class HashMap
 {
 public:
-    vector<pair<int, int>> *buckets;
-    int bucket_size;
-    int total_elements;
+    vector<pair<unsigned int, int>> *buckets; // Key is unsigned int, value is int
+    unsigned int bucket_size;
+    unsigned int total_elements;
     float max_load_factor;
 
-    int hash(int key)
+    unsigned int hash(unsigned int key)
     {
         return key % bucket_size;
     }
 
-    HashMap(int bucket_size = 100, float max_load_factor = 0.75)
+    HashMap(unsigned int bucket_size = 100, float max_load_factor = 0.75)
     {
         this->bucket_size = bucket_size;
         this->max_load_factor = max_load_factor;
-        buckets = new vector<pair<int, int>>[bucket_size];
+        buckets = new vector<pair<unsigned int, int>>[bucket_size];
         total_elements = 0;
     }
 
-    void insert(int key, int value)
+    void insert(unsigned int key, int value)
     {
-        int index = hash(key);
+        unsigned int index = hash(key);
         buckets[index].push_back({key, value});
         total_elements++;
         if ((float)total_elements / bucket_size > max_load_factor)
@@ -45,12 +45,12 @@ public:
 
     void rehash()
     {
-        vector<pair<int, int>> *old_buckets = buckets;
-        int old_bucket_size = bucket_size;
+        vector<pair<unsigned int, int>> *old_buckets = buckets;
+        unsigned int old_bucket_size = bucket_size;
         bucket_size *= 2;
-        buckets = new vector<pair<int, int>>[bucket_size];
+        buckets = new vector<pair<unsigned int, int>>[bucket_size];
         total_elements = 0;
-        for (int i = 0; i < old_bucket_size; i++)
+        for (unsigned int i = 0; i < old_bucket_size; i++)
         {
             for (auto &ele : old_buckets[i])
             {
@@ -60,9 +60,9 @@ public:
         delete[] old_buckets;
     }
 
-    int search(int key)
+    int search(unsigned int key)
     {
-        int index = hash(key);
+        unsigned int index = hash(key);
         for (auto &ele : buckets[index])
         {
             if (ele.first == key)
@@ -73,9 +73,9 @@ public:
         return 0;
     }
 
-    void remove(int key)
+    void remove(unsigned int key)
     {
-        int index = hash(key);
+        unsigned int index = hash(key);
         for (auto it = buckets[index].begin(); it != buckets[index].end(); it++)
         {
             if (it->first == key)
@@ -87,11 +87,11 @@ public:
         }
     }
 
-    int least()
+    unsigned int least()
     {
         int ans = INT_MAX;
-        int key;
-        for (int index = 0; index < bucket_size; index++)
+        unsigned int key;
+        for (unsigned int index = 0; index < bucket_size; index++)
         {
             for (auto it = buckets[index].begin(); it != buckets[index].end(); it++)
             {
@@ -115,19 +115,19 @@ public:
 class TLB_FIFO
 {
 public:
-    unsigned capacity;
+    unsigned int capacity;
     HashMap *hashMap;
-    int front, rear, size;
-    int *array;
-    int hits;
+    unsigned int front, rear, size;
+    unsigned int *array;
+    unsigned int hits;
 
-    TLB_FIFO(unsigned capacity)
+    TLB_FIFO(unsigned int capacity)
     {
         this->capacity = capacity;
         front = size = 0;
         hits = 0;
         rear = capacity - 1;
-        array = new int[this->capacity];
+        array = new unsigned int[this->capacity];
         hashMap = new HashMap();
     }
 
@@ -141,7 +141,7 @@ public:
         return (size == 0);
     }
 
-    void add(int item, int value)
+    void add(unsigned int item, int value)
     {
         rear = (rear + 1) % capacity;
         if (isFull())
@@ -154,7 +154,7 @@ public:
         size++;
     }
 
-    void access(int key)
+    void access(unsigned int key)
     {
         if (hashMap->search(key))
         {
@@ -171,13 +171,13 @@ public:
 class TLB_LIFO
 {
 public:
-    unsigned capacity;
+    unsigned int capacity;
     HashMap *hashMap;
-    int size;
-    int last;
-    int hits;
+    unsigned int size;
+    unsigned int last;
+    unsigned int hits;
 
-    TLB_LIFO(unsigned capacity)
+    TLB_LIFO(unsigned int capacity)
     {
         this->capacity = capacity;
         size = 0;
@@ -196,7 +196,7 @@ public:
         return (size == 0);
     }
 
-    void add(int item, int value)
+    void add(unsigned int item, int value)
     {
         if (isFull())
         {
@@ -208,7 +208,7 @@ public:
         size++;
     }
 
-    void access(int key)
+    void access(unsigned int key)
     {
         if (hashMap->search(key))
         {
@@ -225,13 +225,13 @@ public:
 class TLB_LRU
 {
 public:
-    unsigned capacity;
+    unsigned int capacity;
     HashMap *hashMap;
-    int size;
-    int hits;
-    int counter;
+    unsigned int size;
+    unsigned int hits;
+    unsigned int counter;
 
-    TLB_LRU(unsigned capacity)
+    TLB_LRU(unsigned int capacity)
     {
         this->capacity = capacity;
         size = 0;
@@ -250,11 +250,11 @@ public:
         return (size == 0);
     }
 
-    void add(int item, int value)
+    void add(unsigned int item, int value)
     {
         if (isFull())
         {
-            int key = hashMap->least();
+            unsigned int key = hashMap->least();
             hashMap->remove(key);
             size--;
         }
@@ -262,7 +262,7 @@ public:
         size++;
     }
 
-    void access(int key)
+    void access(unsigned int key)
     {
         if (hashMap->search(key))
         {
@@ -277,14 +277,14 @@ public:
 class TLB_Optimal
 {
 public:
-    unsigned capacity;
+    unsigned int capacity;
     HashMap *hashMap;
-    vector<int> *accesses;
-    int size;
-    int hits;
-    int counter;
+    vector<unsigned int> *accesses;
+    unsigned int size;
+    unsigned int hits;
+    unsigned int counter;
 
-    TLB_Optimal(unsigned capacity, vector<int> *accesses)
+    TLB_Optimal(unsigned int capacity, vector<unsigned int> *accesses)
     {
         this->capacity = capacity;
         size = 0;
@@ -312,11 +312,11 @@ public:
         return (size == 0);
     }
 
-    void add(int item, int value)
+    void add(unsigned int item, int value)
     {
         if (isFull())
         {
-            int key = hashMap->least();
+            unsigned int key = hashMap->least();
             hashMap->remove(key);
             size--;
         }
@@ -324,9 +324,9 @@ public:
         size++;
     }
 
-    int nextAccess(int key)
+    int nextAccess(unsigned int key)
     {
-        for (int i = counter + 1; i < accesses->size(); i++)
+        for (unsigned int i = counter + 1; i < accesses->size(); i++)
         {
             if (accesses->at(i) == key)
             {
@@ -336,7 +336,7 @@ public:
         return INT_MAX;
     }
 
-    void access(int key)
+    void access(unsigned int key)
     {
         if (hashMap->search(key) < 0)
         {
@@ -350,40 +350,33 @@ public:
 
 int main(int argc, char *argv[])
 {
-    int T;
+    unsigned int T;
     cin >> T;
     while (T--)
     {
-        int S;
-        int P, K, N;
+        unsigned int S;
+        unsigned int P, K, N;
         cin >> S; // Address Space in MB
-        cout << "size:";
-        cout << S << endl;
         cin >> P; // Page Size in KB
         cin >> K; // TLB Size
         cin >> N; // Number of Memory Access Requests
-        cout << "num:";
-        cout << N << endl;
 
-        int num_pages = (S * 1024) / P;
-        int page_size = P * 1024;
+        unsigned int num_pages = (S * 1024) / P;
+        unsigned int page_size = P * 1024;
 
-        vector<int> accesses;
+        vector<unsigned int> accesses;
         TLB_FIFO *fifo = new TLB_FIFO(K);
         TLB_LIFO *lifo = new TLB_LIFO(K);
         TLB_LRU *lru = new TLB_LRU(K);
 
-        for (int i = 0; i < N; i++)
+        for (unsigned int i = 0; i < N; i++)
         {
             // Read the memory access request in Hexadecimal format
-            int address;
+            unsigned int address;
             cin >> hex >> address;
 
-            cout << "access:";
-            cout << address << endl;
-
             // Calculate the page number
-            int page = address / page_size;
+            unsigned int page = address / page_size;
 
             // Add the page to the list of accesses
             accesses.push_back(page);
