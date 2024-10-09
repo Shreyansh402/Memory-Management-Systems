@@ -188,26 +188,28 @@ class TLB_Optimal
 public:
     unsigned int capacity;
     unordered_map<unsigned int, int> *hashMap;
-    vector<unsigned int> *accesses;
+    unsigned int *accesses;
     unsigned int size;
     unsigned int hits;
     unsigned int counter;
+    unsigned int num_accesses;
 
-    TLB_Optimal(unsigned int capacity, vector<unsigned int> *accesses)
+    TLB_Optimal(unsigned int capacity, unsigned int *accesses, unsigned int num)
     {
         this->capacity = capacity;
         size = 0;
         hits = 0;
         counter = 0;
+        num_accesses = num;
         hashMap = new unordered_map<unsigned int, int>();
         this->accesses = accesses;
     }
 
     void simulate()
     {
-        for (counter = 0; counter < accesses->size(); counter++)
+        for (counter = 0; counter < num_accesses; counter++)
         {
-            access(accesses->at(counter));
+            access(accesses[counter]);
         }
     }
 
@@ -244,9 +246,9 @@ public:
 
     int nextAccess(unsigned int key)
     {
-        for (unsigned int i = counter + 1; i < accesses->size(); i++)
+        for (unsigned int i = counter + 1; i < num_accesses; i++)
         {
-            if (accesses->at(i) == key)
+            if (accesses[i] == key)
             {
                 return i;
             }
@@ -282,7 +284,7 @@ int main(int argc, char *argv[])
         unsigned int num_pages = (S * 1024) / P;
         unsigned int page_size = P * 1024;
 
-        vector<unsigned int> accesses;
+        unsigned int *accesses = new unsigned int[N];
         TLB_FIFO *fifo = new TLB_FIFO(K);
         TLB_LIFO *lifo = new TLB_LIFO(K);
         TLB_LRU *lru = new TLB_LRU(K);
@@ -297,7 +299,7 @@ int main(int argc, char *argv[])
             unsigned int page = address / page_size;
 
             // Add the page to the list of accesses
-            accesses.push_back(page);
+            accesses[i] = page;
 
             // Access the page in TLB
             fifo->access(page);
@@ -306,7 +308,7 @@ int main(int argc, char *argv[])
         }
 
         // Simulate the Optimal TLB
-        TLB_Optimal *optimal = new TLB_Optimal(K, &accesses);
+        TLB_Optimal *optimal = new TLB_Optimal(K, accesses, N);
         optimal->simulate();
 
         // Print the number of hits for each TLB
