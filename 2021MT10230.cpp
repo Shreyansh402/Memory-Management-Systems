@@ -5,118 +5,17 @@
 // Simulate Virtual Memory Management using TLB and Page Table with different page replacement algorithms
 
 #include <iostream>
-#include <vector>
 #include <string>
 
 using namespace std;
-
-// Implementing Hash Map
-class HashMap
-{
-public:
-    vector<pair<unsigned int, int>> *buckets; // Key is unsigned int, value is int
-    unsigned int bucket_size;
-    unsigned int total_elements;
-    float max_load_factor;
-
-    unsigned int hash(unsigned int key)
-    {
-        return key % bucket_size;
-    }
-
-    HashMap(unsigned int bucket_size = 100, float max_load_factor = 0.75)
-    {
-        this->bucket_size = bucket_size;
-        this->max_load_factor = max_load_factor;
-        buckets = new vector<pair<unsigned int, int>>[bucket_size];
-        total_elements = 0;
-    }
-
-    void insert(unsigned int key, int value)
-    {
-        unsigned int index = hash(key);
-        buckets[index].push_back({key, value});
-        total_elements++;
-        if ((float)total_elements / bucket_size > max_load_factor)
-        {
-            rehash();
-        }
-    }
-
-    void rehash()
-    {
-        vector<pair<unsigned int, int>> *old_buckets = buckets;
-        unsigned int old_bucket_size = bucket_size;
-        bucket_size *= 2;
-        buckets = new vector<pair<unsigned int, int>>[bucket_size];
-        total_elements = 0;
-        for (unsigned int i = 0; i < old_bucket_size; i++)
-        {
-            for (auto &ele : old_buckets[i])
-            {
-                insert(ele.first, ele.second);
-            }
-        }
-        delete[] old_buckets;
-    }
-
-    int search(unsigned int key)
-    {
-        unsigned int index = hash(key);
-        for (auto &ele : buckets[index])
-        {
-            if (ele.first == key)
-            {
-                return ele.second;
-            }
-        }
-        return 0;
-    }
-
-    void remove(unsigned int key)
-    {
-        unsigned int index = hash(key);
-        for (auto it = buckets[index].begin(); it != buckets[index].end(); it++)
-        {
-            if (it->first == key)
-            {
-                buckets[index].erase(it);
-                total_elements--;
-                return;
-            }
-        }
-    }
-
-    unsigned int least()
-    {
-        int ans = INT_MAX;
-        unsigned int key;
-        for (unsigned int index = 0; index < bucket_size; index++)
-        {
-            for (auto it = buckets[index].begin(); it != buckets[index].end(); it++)
-            {
-                if (it->second < ans)
-                {
-                    ans = it->second;
-                    key = it->first;
-                }
-            }
-        }
-        return key;
-    }
-
-    ~HashMap()
-    {
-        delete[] buckets;
-    }
-};
 
 // TLB with FIFO
 class TLB_FIFO
 {
 public:
     unsigned int capacity;
-    HashMap *hashMap;
+    // HashMap *hashMap;
+    unordered_map<unsigned int, int> *hashMap;
     unsigned int front, rear, size;
     unsigned int *array;
     unsigned int hits;
@@ -128,7 +27,7 @@ public:
         hits = 0;
         rear = capacity - 1;
         array = new unsigned int[this->capacity];
-        hashMap = new HashMap();
+        hashMap = new unordered_map<unsigned int, int>();
     }
 
     bool isFull()
@@ -146,17 +45,17 @@ public:
         rear = (rear + 1) % capacity;
         if (isFull())
         {
-            hashMap->remove(array[rear]);
+            hashMap->erase(array[rear]);
             size--;
         }
         array[rear] = item;
-        hashMap->insert(item, value);
+        hashMap->insert({item, value});
         size++;
     }
 
     void access(unsigned int key)
     {
-        if (hashMap->search(key))
+        if (hashMap->find(key) != hashMap->end())
         {
             hits++;
         }
@@ -172,7 +71,7 @@ class TLB_LIFO
 {
 public:
     unsigned int capacity;
-    HashMap *hashMap;
+    unordered_map<unsigned int, int> *hashMap;
     unsigned int size;
     unsigned int last;
     unsigned int hits;
@@ -183,7 +82,7 @@ public:
         size = 0;
         hits = 0;
         last = -1;
-        hashMap = new HashMap();
+        hashMap = new unordered_map<unsigned int, int>();
     }
 
     bool isFull()
@@ -200,17 +99,17 @@ public:
     {
         if (isFull())
         {
-            hashMap->remove(last);
+            hashMap->erase(last);
             size--;
         }
         last = item;
-        hashMap->insert(item, value);
+        hashMap->insert({item, value});
         size++;
     }
 
     void access(unsigned int key)
     {
-        if (hashMap->search(key))
+        if (hashMap->find(key) != hashMap->end())
         {
             hits++;
         }
@@ -226,7 +125,7 @@ class TLB_LRU
 {
 public:
     unsigned int capacity;
-    HashMap *hashMap;
+    unordered_map<unsigned int, int> *hashMap;
     unsigned int size;
     unsigned int hits;
     unsigned int counter;
@@ -237,7 +136,7 @@ public:
         size = 0;
         hits = 0;
         counter = 1;
-        hashMap = new HashMap();
+        hashMap = new unordered_map<unsigned int, int>();
     }
 
     bool isFull()
@@ -254,20 +153,30 @@ public:
     {
         if (isFull())
         {
-            unsigned int key = hashMap->least();
-            hashMap->remove(key);
+            // unsigned int key = hashMap->least();
+            unsigned int key = 0;
+            int minn = INT_MAX;
+            for (auto it = hashMap->begin(); it != hashMap->end(); it++)
+            {
+                if (it->second < minn)
+                {
+                    minn = it->second;
+                    key = it->first;
+                }
+            }
+            hashMap->erase(key);
             size--;
         }
-        hashMap->insert(item, value);
+        hashMap->insert({item, value});
         size++;
     }
 
     void access(unsigned int key)
     {
-        if (hashMap->search(key))
+        if (hashMap->find(key) != hashMap->end())
         {
             hits++;
-            hashMap->remove(key);
+            hashMap->erase(key);
         }
         add(key, counter++);
     }
@@ -278,7 +187,7 @@ class TLB_Optimal
 {
 public:
     unsigned int capacity;
-    HashMap *hashMap;
+    unordered_map<unsigned int, int> *hashMap;
     vector<unsigned int> *accesses;
     unsigned int size;
     unsigned int hits;
@@ -290,7 +199,7 @@ public:
         size = 0;
         hits = 0;
         counter = 0;
-        hashMap = new HashMap();
+        hashMap = new unordered_map<unsigned int, int>();
         this->accesses = accesses;
     }
 
@@ -316,11 +225,20 @@ public:
     {
         if (isFull())
         {
-            unsigned int key = hashMap->least();
-            hashMap->remove(key);
+            unsigned int key = 0;
+            int maxx = INT_MIN;
+            for (auto it = hashMap->begin(); it != hashMap->end(); it++)
+            {
+                if (it->second > maxx)
+                {
+                    maxx = it->second;
+                    key = it->first;
+                }
+            }
+            hashMap->erase(key);
             size--;
         }
-        hashMap->insert(item, value);
+        hashMap->insert({item, value});
         size++;
     }
 
@@ -338,13 +256,13 @@ public:
 
     void access(unsigned int key)
     {
-        if (hashMap->search(key) < 0)
+        if (hashMap->find(key) != hashMap->end())
         {
             hits++;
-            hashMap->remove(key);
+            hashMap->erase(key);
         }
         int next = nextAccess(key);
-        add(key, -next);
+        add(key, next);
     }
 };
 
