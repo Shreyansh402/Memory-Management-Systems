@@ -22,11 +22,16 @@ static MemBlock *head = NULL;
 // Function to request memory using sbrk
 void *request_memory(size_t size)
 {
-    void *block = sbrk(size);
-    if (block == (void *)-1)
+    // void *block = sbrk(size);
+    // if (block == (void *)-1)
+    // {
+    //     return NULL; // sbrk failed
+    // }
+    void *block = mmap(NULL, size, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
+    if (block == MAP_FAILED)
     {
         errno = ENOMEM;
-        return NULL; // sbrk failed
+        return NULL; // mmap failed
     }
     return block;
 }
