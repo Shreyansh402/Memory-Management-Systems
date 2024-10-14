@@ -262,6 +262,7 @@ public:
         {
             hits++;
             hashMap->erase(key);
+            size--;
         }
         int next = nextAccess(key);
         add(key, next);
