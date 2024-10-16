@@ -169,13 +169,18 @@ void my_free(void *ptr)
             last_block->next = NULL;
         }
 
-        if (((void *)current + sizeof(MemBlock) + current->size) == sbrk(0))
+        // if (((void *)current + sizeof(MemBlock) + current->size) == sbrk(0))
+        // {
+        //     // If the last block is at the end of the heap, release it using brk()
+        //     if (brk(current) != 0)
+        //     {
+        //         errno = ENOMEM; // Failed to release memory
+        //     }
+        // }
+        // Use munmap to release the memory
+        if (munmap(current, sizeof(MemBlock) + current->size) != 0)
         {
-            // If the last block is at the end of the heap, release it using brk()
-            if (brk(current) != 0)
-            {
-                errno = ENOMEM; // Failed to release memory
-            }
+            errno = ENOMEM; // Failed to release memory
         }
     }
 }
