@@ -177,6 +177,7 @@ public:
         {
             hits++;
             hashMap->erase(key);
+            size--;
         }
         add(key, counter++);
     }
@@ -271,6 +272,7 @@ public:
 
 int main(int argc, char *argv[])
 {
+    // freopen("input.txt", "r", stdin);
     unsigned int T;
     cin >> T;
     while (T--)
